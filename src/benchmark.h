@@ -84,8 +84,9 @@ benchmark_stock_list_from_file_get(const char      *homedir,
                                    unsigned int     num_stocks,
                                    char          ***stock_list_ret);
 
-BENCHMARK_DATA_PACKET_H
-benchmark_data_packet_alloc(size_t reqsz);
+int
+benchmark_data_packet_alloc(size_t reqsz, 
+                            BENCHMARK_DATA_PACKET_H *data_packetH);
 
 int
 benchmark_data_packet_free(BENCHMARK_DATA_PACKET_H data_packetH);

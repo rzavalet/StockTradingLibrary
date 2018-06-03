@@ -7,10 +7,12 @@
 
 #include "benchmark_common.h"
 
-void *
-benchmark_data_packet_alloc(size_t reqsz)
+int
+benchmark_data_packet_alloc(size_t reqsz, void **data_packetH)
 {
   benchmark_data_packet_t *packetP = NULL;
+
+  *data_packetH = NULL;
 
   if (reqsz <= 0) {
     benchmark_error("Invalid argument");
@@ -34,7 +36,9 @@ benchmark_data_packet_alloc(size_t reqsz)
   packetP->size = reqsz;
   packetP->used = 0;
 
-  return packetP;
+  *data_packetH = packetP;
+
+  return BENCHMARK_SUCCESS;
 
 failXit:
 
@@ -48,7 +52,7 @@ failXit:
     packetP = NULL;
   }
 
-  return NULL;
+  return BENCHMARK_FAIL;
 }
 
 int
