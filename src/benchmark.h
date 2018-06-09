@@ -5,7 +5,7 @@ typedef void *BENCHMARK_H;
 typedef void *BENCHMARK_DATA_PACKET_H;
 
 int 
-benchmark_handle_alloc(BENCHMARK_H benchmark_handle,
+benchmark_handle_alloc(BENCHMARK_H *benchmark_handle,
                        int create, 
                        const char *program, 
                        const char *homedir, 
