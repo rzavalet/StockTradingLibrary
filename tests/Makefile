@@ -1,6 +1,7 @@
 ROOT=../../
+BERKELEY=/usr/local/BerkeleyDB.6.2
 CC=gcc
-CFLAGS= -I/home/ricardozavaleta/usr/include -I/usr/local/BerkeleyDB.6.2/include -L/home/ricardozavaleta/usr/lib -L/usr/local/BerkeleyDB.6.2/lib -g -Wall
+CFLAGS= -I$(HOME)/usr/include -I$(BERKELEY)/include -L$(HOME)/usr/lib -L$(BERKELEY)/lib -g -Wall
 LIBS=-lstocktrading -ldb-6.2
 
 EXE = test1 test2
