@@ -15,7 +15,20 @@ $(EXE): %: %.o
 	$(CC) -o $@ $< $(CFLAGS) $(LIBS)
 
 init :
-	make -C $(ROOT)
+	-@echo "#---------------------------------------------------#"
+	-@echo "#--------- Setting up directory structure ----------#"
+	-@echo "#---------------------------------------------------#"
+	-rm -rf /tmp/cnt*
+	-rm -rf /tmp/upd*
+	-rm -rf /tmp/chronos/databases
+	-rm -rf /tmp/chronos/datafiles
+	mkdir -p /tmp/chronos/databases
+	mkdir -p /tmp/chronos/datafiles
+	cp ../datafiles/* /tmp/chronos/datafiles
+	-@echo "#-------------------- DONE -------------------------#"
+
+cscope:
+	cscope -bqRv
 
 .PHONY: clean
 
