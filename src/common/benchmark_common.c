@@ -2408,11 +2408,16 @@ benchmark_handle_alloc(void **benchmark_handle,
   ret = databases_setup(benchmarkP, ALL_DBS_FLAG, program, stderr);
   if (ret != 0) {
     benchmark_error("Error opening databases.");
-    databases_close(benchmarkP);
     goto failXit;
   }
 
   if (create) benchmarkP->createDBs = 0;
+
+  ret = benchmark_stocks_symbols_get(benchmarkP);
+  if (ret != 0) {
+    goto failXit;
+  }
+
   BENCHMARK_CHECK_MAGIC(benchmarkP);
 
   *benchmark_handle = benchmarkP;
@@ -2420,6 +2425,11 @@ benchmark_handle_alloc(void **benchmark_handle,
   return BENCHMARK_SUCCESS;
 
 failXit:
+  if (benchmarkP) {
+    benchmark_handle_free(benchmarkP);
+    benchmarkP = NULL;
+  }
+
   *benchmark_handle = NULL;
   return BENCHMARK_FAIL;
 }

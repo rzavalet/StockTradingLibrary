@@ -57,7 +57,7 @@ sub setupTest
     return 1;
   }
 
-  $cmd = "cp ../../datafiles/* /tmp/chronos/datafiles";
+  $cmd = "cp ../datafiles/* /tmp/chronos/datafiles";
   $rc = system($cmd);
   if ($rc != 0) {
     print "ERROR: Failed to cleanup\n";

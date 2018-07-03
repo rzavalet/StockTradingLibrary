@@ -31,10 +31,16 @@ benchmark_view_stock(void *benchmark_handle, int *symbolP)
 
   benchmarkP = benchmark_handle;
   if (benchmarkP == NULL) {
+    benchmark_error("Invalid benchmark handle");
     goto failXit;
   }
   
   BENCHMARK_CHECK_MAGIC(benchmarkP);
+
+  if (benchmarkP->stocks == NULL || benchmarkP->number_stocks <= 0) {
+    benchmark_error("Stock list has not been loaded");
+    goto failXit;
+  }
 
   if (symbolP != NULL && *symbolP >= 0) {
     symbol = *symbolP;
@@ -75,6 +81,7 @@ benchmark_view_stock2(int num_symbols, const char **symbol_list_P, void *benchma
 
   benchmarkP = benchmark_handle;
   if (benchmarkP == NULL) {
+    benchmark_error("Invalid benchmark handle");
     goto failXit;
   }
   

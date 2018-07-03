@@ -4,7 +4,7 @@ CC=gcc
 CFLAGS= -I$(HOME)/usr/include -I$(BERKELEY)/include -L$(HOME)/usr/lib -L$(BERKELEY)/lib -g -Wall
 LIBS=-lstocktrading -ldb-6.2
 
-EXE = test1 test2
+EXE = test1 test2 test3
 OBJ = $(patsubst %,%.o,$(EXE))
 
 all: $(EXE)
