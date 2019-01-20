@@ -260,7 +260,10 @@ place_order(const char *account_id,
             BENCHMARK_DBS *benchmarkP);
 
 int 
-update_stock(char *symbolP, float newValue, BENCHMARK_DBS *benchmarkP);
+update_stock(char *symbolP, 
+             float newValue, 
+             benchmark_xact_h  xactH,
+             BENCHMARK_DBS *benchmarkP);
 
 int 
 sell_stocks(const char *account_id, 
@@ -344,7 +347,8 @@ int benchmark_debug_level;
     fprintf(_fp,"\n");					     \
   } while(0)
 
-#if BENCHMARK_DEBUG
+#define BENCHMARK_DEBUG
+#ifdef BENCHMARK_DEBUG
 #define benchmark_info(...) \
   benchmark_msg("INFO", stderr, __VA_ARGS__)
 #else

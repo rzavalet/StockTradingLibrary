@@ -19,13 +19,15 @@
 #include "common/benchmark_common.h"
 
 int
-benchmark_portfolios_stats_get(BENCHMARK_DBS *benchmarkP)
+benchmark_portfolios_stats_get(void *benchmark_handle)
 {
   int             rc = BENCHMARK_SUCCESS;
   DB             *portfolios_dbp = NULL;
   DB_BTREE_STAT  *portfolios_statsP = NULL;
   DB_ENV         *envP = NULL;
+  BENCHMARK_DBS  *benchmarkP = NULL;
 
+  benchmarkP = benchmark_handle;
   if (benchmarkP == NULL) {
     goto failXit;
   }

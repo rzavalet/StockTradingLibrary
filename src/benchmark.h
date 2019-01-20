@@ -23,6 +23,9 @@ int
 benchmark_load_portfolio(BENCHMARK_H benchmark_handle);
 
 int
+benchmark_portfolios_stats_get(BENCHMARK_H benchmark_handle);
+
+int
 benchmark_refresh_quotes(BENCHMARK_H benchmark_handle, 
                          int *symbolP, 
                          float newValue);
@@ -32,6 +35,11 @@ benchmark_refresh_quotes2(BENCHMARK_H benchmark_handle,
                           const char *symbolP, 
                           float newValue);
 
+int
+benchmark_refresh_quotes_list(int            num_symbols,
+                              const char   **symbols_list,
+                              float         *prices_list,
+                              void          *benchmark_handle);
 int
 benchmark_view_stock(BENCHMARK_H benchmark_handle, 
                      int *symbolP);

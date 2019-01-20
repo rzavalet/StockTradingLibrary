@@ -1497,7 +1497,10 @@ cleanup:
 }
 
 int 
-update_stock(char *symbolP, float newValue, BENCHMARK_DBS *benchmarkP)
+update_stock(char *symbolP, 
+             float newValue, 
+             benchmark_xact_h  xactH,
+             BENCHMARK_DBS *benchmarkP)
 {
   int rc = BENCHMARK_SUCCESS;
   DB_TXN  *txnP = NULL;
@@ -1520,10 +1523,15 @@ update_stock(char *symbolP, float newValue, BENCHMARK_DBS *benchmarkP)
   memset(&key, 0, sizeof(DBT));
   memset(&data, 0, sizeof(DBT));
 
-  rc = envP->txn_begin(envP, NULL, &txnP, DB_READ_COMMITTED | DB_TXN_WAIT);
-  if (rc != 0) {
-    envP->err(envP, rc, "[%s:%d] [%d] Transaction begin failed.", __FILE__, __LINE__, getpid());
-    goto failXit; 
+  if (xactH == NULL) {
+    rc = envP->txn_begin(envP, NULL, &txnP, DB_READ_COMMITTED | DB_TXN_WAIT);
+    if (rc != 0) {
+      envP->err(envP, rc, "[%s:%d] [%d] Transaction begin failed.", __FILE__, __LINE__, getpid());
+      goto failXit; 
+    }
+  }
+  else {
+    txnP = (DB_TXN *)xactH;
   }
 
   benchmark_debug(BENCHMARK_DEBUG_LEVEL_XACT,"PID: %d, Starting transaction: %p", getpid(), txnP);
@@ -1567,11 +1575,13 @@ update_stock(char *symbolP, float newValue, BENCHMARK_DBS *benchmarkP)
     cursorp = NULL;
   }
 
-  benchmark_debug(BENCHMARK_DEBUG_LEVEL_XACT, "PID: %d, Committing transaction: %p", getpid(), txnP);
-  rc = txnP->commit(txnP, 0);
-  if (rc != 0) {
-    envP->err(envP, rc, "[%s:%d] [%d] Transaction commit failed. txnP: %p", __FILE__, __LINE__, getpid(), txnP);
-    goto failXit; 
+  if (xactH == NULL) {
+    benchmark_debug(BENCHMARK_DEBUG_LEVEL_XACT, "PID: %d, Committing transaction: %p", getpid(), txnP);
+    rc = txnP->commit(txnP, 0);
+    if (rc != 0) {
+      envP->err(envP, rc, "[%s:%d] [%d] Transaction commit failed. txnP: %p", __FILE__, __LINE__, getpid(), txnP);
+      goto failXit; 
+    }
   }
 
   BENCHMARK_CHECK_MAGIC(benchmarkP);
@@ -1579,7 +1589,7 @@ update_stock(char *symbolP, float newValue, BENCHMARK_DBS *benchmarkP)
 
 failXit:
   BENCHMARK_CHECK_MAGIC(benchmarkP);
-  if (txnP != NULL) {
+  if (xactH == NULL && txnP != NULL) {
     if (cursorp != NULL) {
       rc = cursorp->close(cursorp);
       if (rc != 0) {
@@ -2072,8 +2082,7 @@ get_portfolio(const char *account_id,
     goto failXit;
   }
   
-  while ((rc=cursorp->pget(cursorp, &key, &pkey, &pdata, DB_NEXT)) == 0)
-  {
+  while ((rc=cursorp->pget(cursorp, &key, &pkey, &pdata, DB_NEXT)) == 0) {
     /* TODO: Is this comparison needed? */
     if (strcmp(account_id, (char *)key.data) == 0) {
       if ( symbol != NULL && symbol[0] != '\0') {
@@ -2362,7 +2371,7 @@ create_portfolio(const char *account_id,
   data.size = sizeof(PORTFOLIOS);
 
   /* Put the data into the database */
-  benchmark_debug(BENCHMARK_DEBUG_LEVEL_XACT, "Inserting: %s", (char *)key.data);
+  benchmark_debug(BENCHMARK_DEBUG_LEVEL_XACT, "Inserting: [portfolio_id = %s]", (char *)key.data);
 
   rc = benchmarkP->portfolios_dbp->put(benchmarkP->portfolios_dbp, txnP, &key, &data, DB_NOOVERWRITE);
   if (rc != 0) {
@@ -2389,7 +2398,7 @@ benchmark_handle_alloc(void **benchmark_handle,
   BENCHMARK_DBS *benchmarkP = NULL;
   int ret = BENCHMARK_FAIL;
 
-  set_benchmark_debug_level(BENCHMARK_DEBUG_LEVEL_MIN);
+  set_benchmark_debug_level(BENCHMARK_DEBUG_LEVEL_MAX);
 
   benchmarkP = malloc(sizeof (BENCHMARK_DBS));
   if (benchmarkP == NULL) {
@@ -2413,10 +2422,12 @@ benchmark_handle_alloc(void **benchmark_handle,
 
   if (create) benchmarkP->createDBs = 0;
 
+#if 0
   ret = benchmark_stocks_symbols_get(benchmarkP);
   if (ret != 0) {
     goto failXit;
   }
+#endif
 
   BENCHMARK_CHECK_MAGIC(benchmarkP);
 
