@@ -1556,7 +1556,7 @@ update_stock(char *symbolP,
     }
   }
 
-  benchmark_info("PID: %d, txnP: %p Updating %s to %f", getpid(), txnP, quoteP->symbol, quoteP->current_price);
+  benchmark_debug(BENCHMARK_DEBUG_LEVEL_XACT, "PID: %d, txnP: %p Updating %s to %f", getpid(), txnP, quoteP->symbol, quoteP->current_price);
 
   /* Save the record */
   rc = cursorp->put(cursorp, &key, &data, DB_CURRENT);
@@ -1718,17 +1718,17 @@ sell_stocks(const char *account_id,
     quoteP = data_quote.data;
     benchmark_debug(BENCHMARK_DEBUG_LEVEL_XACT, "Current price for stock: %s is %f, requested is: %f", symbol, quoteP->current_price, price);
     if (quoteP->current_price >= price) {
-      benchmark_info("Selling %d stocks", amount);
+      benchmark_debug(BENCHMARK_DEBUG_LEVEL_XACT, "Selling %d stocks", amount);
       portfolioP->hold_stocks -= amount;
     }
     else {
-      benchmark_info("Price is to low to process request");
+      benchmark_debug(BENCHMARK_DEBUG_LEVEL_XACT, "Price is to low to process request");
       goto failXit;
     }
   }
   /* Save the request and let the system decide */
   else {
-    benchmark_info("Setting sell request for stock: %s for %d at %f", symbol, amount, price);
+    benchmark_debug(BENCHMARK_DEBUG_LEVEL_XACT, "Setting sell request for stock: %s for %d at %f", symbol, amount, price);
     portfolioP->to_sell = 1;
     portfolioP->number_sell = amount;
     portfolioP->price_sell = price;
@@ -1900,17 +1900,17 @@ place_order(const char *account_id,
       quoteP = data_quote.data;
       benchmark_debug(BENCHMARK_DEBUG_LEVEL_XACT, "Current price for stock: %s is %f, requested is: %f", symbol, quoteP->current_price, price);
       if (quoteP->current_price <= price) {
-        benchmark_info("Purchasing %d stocks", amount);
+        benchmark_debug(BENCHMARK_DEBUG_LEVEL_XACT, "Purchasing %d stocks", amount);
         portfolioP->hold_stocks += amount;
       }
       else {
-        benchmark_info("Price is to high to process request");
+        benchmark_debug(BENCHMARK_DEBUG_LEVEL_XACT, "Price is to high to process request");
         goto failXit;
       }
     }
     /* Save the request and let the system decide */
     else {
-      benchmark_info("Setting buy request for stock: %s for %d at %f", symbol, amount, price);
+      benchmark_debug(BENCHMARK_DEBUG_LEVEL_XACT, "Setting buy request for stock: %s for %d at %f", symbol, amount, price);
       portfolioP->to_buy = 1;
       portfolioP->number_buy = amount;
       portfolioP->price_buy = price;
@@ -1936,17 +1936,17 @@ place_order(const char *account_id,
       quoteP = data_quote.data;
       benchmark_debug(BENCHMARK_DEBUG_LEVEL_XACT, "Current price for stock: %s is %f, requested is: %f", symbol, quoteP->current_price, price);
       if (quoteP->current_price <= price) {
-        benchmark_info("Purchasing %d stocks of symbol: %s at %f USD since %s wanted a price <= %f USD", 
+        benchmark_debug(BENCHMARK_DEBUG_LEVEL_XACT, "Purchasing %d stocks of symbol: %s at %f USD since %s wanted a price <= %f USD", 
                        amount, symbol, quoteP->current_price, account_id, price);
       }
       else {
-        benchmark_info("Price is to high to process request. Price is: %f USD for symbol: %s, but %s wanted a price <= %f USD ",
+        benchmark_debug(BENCHMARK_DEBUG_LEVEL_XACT, "Price is to high to process request. Price is: %f USD for symbol: %s, but %s wanted a price <= %f USD ",
                         quoteP->current_price, symbol, account_id, price);
         goto failXit;
       }
     }
 
-    benchmark_info("User: %s currently doesn't hold stocks of symbol: %s, so updating its portfolio....", account_id, symbol);
+    benchmark_debug(BENCHMARK_DEBUG_LEVEL_XACT, "User: %s currently doesn't hold stocks of symbol: %s, so updating its portfolio....", account_id, symbol);
     rc = create_portfolio(account_id, symbol, price, amount, force_apply, txnP, benchmarkP);
     if (rc != BENCHMARK_SUCCESS) {
       benchmark_error("Could not create new entry in portfolio");
@@ -2398,7 +2398,7 @@ benchmark_handle_alloc(void **benchmark_handle,
   BENCHMARK_DBS *benchmarkP = NULL;
   int ret = BENCHMARK_FAIL;
 
-  set_benchmark_debug_level(BENCHMARK_DEBUG_LEVEL_MAX);
+  set_benchmark_debug_level(BENCHMARK_DEBUG_LEVEL_MIN);
 
   benchmarkP = malloc(sizeof (BENCHMARK_DBS));
   if (benchmarkP == NULL) {
