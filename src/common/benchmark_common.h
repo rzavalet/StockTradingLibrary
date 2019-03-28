@@ -319,7 +319,7 @@ benchmark_handle_alloc(void **benchmark_handle,
 #define BENCHMARK_DEBUG_LEVEL_XACT  (5)
 #define BENCHMARK_DEBUG_LEVEL_API   (4)
 
-extern int benchmark_debug_level;
+int benchmark_debug_level;
 
 #define set_benchmark_debug_level(_level)  \
   (benchmark_debug_level = (_level))
