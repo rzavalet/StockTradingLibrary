@@ -1496,11 +1496,19 @@ cleanup:
   return rc;
 }
 
+/*-----------------------------------------------
+ * Update the price of the stock for the provided
+ * symbol with the provided new value.
+ *
+ * We first get the stock, then update the 
+ * structure with the new price and then
+ * save the changes in the database.
+ *---------------------------------------------*/
 int 
-update_stock(char *symbolP, 
-             float newValue, 
+update_stock(char             *symbolP, 
+             float             newValue, 
              benchmark_xact_h  xactH,
-             BENCHMARK_DBS *benchmarkP)
+             BENCHMARK_DBS    *benchmarkP)
 {
   int rc = BENCHMARK_SUCCESS;
   DB_TXN  *txnP = NULL;

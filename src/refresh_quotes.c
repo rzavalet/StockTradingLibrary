@@ -97,11 +97,16 @@ benchmark_refresh_quotes2(void *benchmark_handle, const char *symbolP, float new
   return BENCHMARK_FAIL;
 }
 
+/*------------------------------------------------------------
+ * Updates the quotes of the provided symbols with the
+ * provided prices. All the updates happen in the 
+ * same transaction.
+ *----------------------------------------------------------*/
 int
 benchmark_refresh_quotes_list(int           num_symbols,
-                              const char    **symbols_list,
-                              float         *prices_list,
-                              void          *benchmark_handle)
+                              const char  **symbols_list,
+                              float        *prices_list,
+                              void         *benchmark_handle)
 {
   BENCHMARK_DBS *benchmarkP = NULL;
   benchmark_xact_h xactH = NULL;

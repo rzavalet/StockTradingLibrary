@@ -146,7 +146,7 @@ typedef struct benchmark_dbs {
   char *portfolios_sdb_name;
 
   /* How many stores do we have in the system */
-  int   number_stocks;
+  int    number_stocks;
   char **stocks;
 
   int   number_portfolios;

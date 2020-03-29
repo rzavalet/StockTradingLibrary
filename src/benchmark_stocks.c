@@ -33,6 +33,12 @@ cleanup:
   return rc;
 }
 
+
+/*-------------------------------------------------------
+ * Iterates over the stored stocks and obtains the 
+ * names. The names are stored in a list of strings
+ * in the BENCHMARK_DBS structure.
+ *-----------------------------------------------------*/
 int
 benchmark_stocks_symbols_get(BENCHMARK_DBS *benchmarkP)
 {
@@ -45,7 +51,7 @@ benchmark_stocks_symbols_get(BENCHMARK_DBS *benchmarkP)
   int      rc = BENCHMARK_SUCCESS;
   int      current_slot = 0;
 
-  if (benchmarkP==NULL) {
+  if (benchmarkP == NULL) {
     benchmark_error("Invalid arguments");
     goto failXit;
   }
@@ -64,7 +70,10 @@ benchmark_stocks_symbols_get(BENCHMARK_DBS *benchmarkP)
   memset(&key, 0, sizeof(DBT));
   memset(&data, 0, sizeof(DBT));
 
-  ret = envP->txn_begin(envP, NULL, &txnP, DB_READ_COMMITTED | DB_TXN_WAIT);
+  ret = envP->txn_begin(envP, 
+                        NULL, 
+                        &txnP, 
+                        DB_READ_COMMITTED | DB_TXN_WAIT);
   if (ret != 0) {
     envP->err(envP, ret, 
               "[%s:%d] [%d] Transaction begin failed.", 
@@ -72,7 +81,11 @@ benchmark_stocks_symbols_get(BENCHMARK_DBS *benchmarkP)
     goto failXit;
   }
 
-  rc = benchmarkP->stocks_dbp->stat(benchmarkP->stocks_dbp, txnP, (void *)&stocks_statsP, 0 /* no FAST_STAT */);
+  /* Get number of stocks in the database */
+  rc = benchmarkP->stocks_dbp->stat(benchmarkP->stocks_dbp, 
+                                    txnP, 
+                                    (void *)&stocks_statsP, 
+                                    0 /* no FAST_STAT */);
   if (rc != 0) {
     envP->err(envP, rc, 
               "[%s:%d] [%d] Failed to obtain stats from Stocks table.", 
@@ -84,14 +97,19 @@ benchmark_stocks_symbols_get(BENCHMARK_DBS *benchmarkP)
   benchmark_debug(5, 
                   "Number of keys in Stocks table is: %d", 
                   benchmarkP->number_stocks);
+
+  /* Allocate an array of chars to hold the info 
+   * of the stocks */
   benchmarkP->stocks = calloc(benchmarkP->number_stocks, sizeof (char *));
   if (benchmarkP->stocks == NULL) {
     benchmark_error("Could not allocate storage for stocks list");
     goto failXit;
   }
 
-  ret = benchmarkP->stocks_dbp->cursor(benchmarkP->stocks_dbp, txnP,
-                                    &cursorP, DB_READ_COMMITTED);
+  ret = benchmarkP->stocks_dbp->cursor(benchmarkP->stocks_dbp, 
+                                       txnP,
+                                       &cursorP, 
+                                       DB_READ_COMMITTED);
   if (ret != 0) {
     envP->err(envP, ret, 
               "[%s:%d] [%d] Failed to create cursor for Stocks.", 
@@ -100,7 +118,11 @@ benchmark_stocks_symbols_get(BENCHMARK_DBS *benchmarkP)
   }
 
   /* Iterate over the database, retrieving each record in turn. */
-  while ((ret = cursorP->get(cursorP, &key, &data, DB_NEXT | DB_READ_COMMITTED)) == 0) {
+  while ((ret = cursorP->get(cursorP, 
+                             &key, 
+                             &data, 
+                             DB_NEXT | DB_READ_COMMITTED)) == 0) 
+  {
     benchmark_debug(5, "PID: %d, Copying stock number %d, %s", 
                     getpid(), current_slot, (char *)key.data);
 
@@ -228,8 +250,13 @@ cleanup:
 }
 
 
+/*-------------------------------------------------------
+ * Gets the list of stocks from the benchmark handle.
+ *-----------------------------------------------------*/
 int
-benchmark_stock_list_get(void *benchmark_handle, char ***stocks_list, int *num_stocks)
+benchmark_stock_list_get(void   *benchmark_handle, 
+                         char ***stocks_list, 
+                         int    *num_stocks)
 {
   int            rc = BENCHMARK_SUCCESS;
   BENCHMARK_DBS *benchmarkP = NULL;
@@ -241,6 +268,13 @@ benchmark_stock_list_get(void *benchmark_handle, char ***stocks_list, int *num_s
   }
 
   BENCHMARK_CHECK_MAGIC(benchmarkP);
+  if (benchmarkP->number_stocks == 0 || benchmarkP->stocks == NULL) {
+    rc = benchmark_stocks_symbols_get(benchmarkP);
+    if (rc != BENCHMARK_SUCCESS) {
+      goto failXit;
+    }
+  }
+
   *stocks_list = benchmarkP->stocks; 
   *num_stocks = benchmarkP->number_stocks;
   BENCHMARK_CHECK_MAGIC(benchmarkP);
@@ -254,6 +288,10 @@ cleanup:
   return rc;
 }
 
+/*-------------------------------------------------------
+ * Gets the list of stocks from the stocks files that
+ * is used initially to populate the stocks database.
+ *-----------------------------------------------------*/
 int
 benchmark_stock_list_from_file_get(const char      *homedir,
                                    const char      *datafilesdir,
