@@ -14,7 +14,7 @@ benchmark_handle_alloc(BENCHMARK_H *benchmark_handle,
 int 
 benchmark_handle_free(BENCHMARK_H benchmark_handle);
 
-int 
+void *
 benchmark_initial_load(const char *program,
                        const char *homedir, 
                        const char *datafilesdir);

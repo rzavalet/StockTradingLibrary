@@ -33,7 +33,7 @@ load_personal_database(BENCHMARK_DBS *benchmarkP, const char *personal_file);
 static int
 load_quotes_database(BENCHMARK_DBS *benchmarkP, const char *quotes_file);
 
-int 
+BENCHMARK_DBS *
 benchmark_initial_load(const char *program,
                        const char *homedir, 
                        const char *datafilesdir) 
@@ -113,22 +113,23 @@ benchmark_initial_load(const char *program,
  
   BENCHMARK_CLEAR_CREATE_DB(benchmarkP);
 
+#if 0
   if (benchmark_handle_free(benchmarkP) != BENCHMARK_SUCCESS) {
     benchmark_error("Failed to free handle");
     goto failXit;
   }
+#endif
 
   benchmark_debug(1, "Done with initial load ...");
 
-  ret = BENCHMARK_SUCCESS;
   goto cleanup;
 
- failXit:
+failXit:
   if (benchmark_handle_free(benchmarkP) != BENCHMARK_SUCCESS) {
     benchmark_error("Failed to free handle");
   }
 
-  ret = BENCHMARK_FAIL;
+  benchmarkP = NULL;
 
 cleanup:
   free(personal_file);
@@ -136,7 +137,7 @@ cleanup:
   free(currencies_file);
   free(quotes_file);
 
-  return ret;
+  return benchmarkP;
 }
 
 

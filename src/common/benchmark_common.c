@@ -139,6 +139,18 @@ open_database(DB_ENV *envP,
     }
   }
 
+  /* 
+   * Configure the cache file. This can be done
+   * at any point in the application's life once the
+   * DB handle has been created.
+   */
+  DB_MPOOLFILE *mpf = dbp->get_mpf(dbp);
+  ret = mpf->set_flags(mpf, DB_MPOOL_NOFILE, 1);
+  if (ret != 0) {
+    envP->err(envP, ret, "[%s:%d] [%d] Failed to set no pool file.", __FILE__, __LINE__, getpid());
+    return (ret);
+  }
+
   /* Set the open flags */
   open_flags = DB_THREAD          /* multi-threaded application */
               | DB_AUTO_COMMIT;   /* open is a transation */ 
@@ -151,7 +163,7 @@ open_database(DB_ENV *envP,
   /* Now open the database */
   ret = dbp->open(dbp,        /* Pointer to the database */
                   NULL,       /* Txn pointer */
-                  file_name,  /* File name */
+                  NULL,       /* file_name,  File name */
                   NULL,       /* Logical db name */
                   DB_BTREE,   /* Database type (using btree) */
                   open_flags, /* Open flags */
@@ -241,17 +253,30 @@ int open_environment(BENCHMARK_DBS *benchmarkP)
     goto failXit;
   }
  
+  rc = envP->set_cachesize(envP, 
+                           0,    /* 0 gigabytes */
+                           10 * 1024 * 1024,    /* 10 megabytes */
+                           1);    /* Create 1 cache. All memory will 
+                                   * be allocated contiguously. */
+  if (rc != 0) {
+    benchmark_error("Error setting cache size: %s", db_strerror(rc));
+    goto failXit;
+  }
+
   env_flags = DB_INIT_TXN  |  /* Init transaction subsystem */
               DB_INIT_LOCK |  /* Init locking subsystem */
               DB_INIT_LOG  |  /* Init logging subsystem */
               DB_INIT_MPOOL|  /* Init shared memory buffer pool */
-              DB_THREAD    ;  /* Multithreaded application */
+              DB_THREAD    |  /* Multithreaded application */
+              DB_PRIVATE;     /* Region files are not backed by the filesystem */
 
   if (benchmarkP->createDBs == 1)  {
     env_flags |= DB_CREATE;   /* Create underlying files as necessary */
   }
 
+#if 0
  env_flags |= DB_SYSTEM_MEM;  /* Allocate from shared memory instead of heap memory */
+#endif
 
   /*
    * Indicate that we want db to perform lock detection internally.
@@ -265,11 +290,13 @@ int open_environment(BENCHMARK_DBS *benchmarkP)
       goto failXit;
   } 
 
+#if 0
   rc = envP->set_shm_key(envP, CHRONOS_SHMKEY); 
   if (rc != 0) {
       benchmark_error("Error setting shm key: %s", db_strerror(rc));
       goto failXit;
   } 
+#endif
 
   rc = envP->set_timeout(envP, 10000000, DB_SET_LOCK_TIMEOUT);
   if (rc != 0) {
@@ -283,7 +310,24 @@ int open_environment(BENCHMARK_DBS *benchmarkP)
       goto failXit;
   } 
 
-  rc = envP->open(envP, benchmarkP->db_home_dir, env_flags, 0); 
+  /* Specify in-memory logging */
+  rc = envP->log_set_config(envP, DB_LOG_IN_MEMORY, 1);
+  if (rc != 0) {
+    benchmark_error("Error setting log subsystem to in-memory: %s", db_strerror(rc));
+    goto failXit;
+  }
+
+  /* 
+   * Specify the size of the in-memory log buffer. 
+   */
+  rc = envP->set_lg_bsize(envP, 10 * 1024 * 1024);
+  if (rc != 0) {
+    benchmark_error("Error increasing the log buffer size: %s", db_strerror(rc));
+    goto failXit;
+  }
+
+  //rc = envP->open(envP, benchmarkP->db_home_dir, env_flags, 0); 
+  rc = envP->open(envP, NULL, env_flags, 0); 
   if (rc != 0) {
     benchmark_error("Error opening environment: %s", db_strerror(rc));
     goto failXit;
